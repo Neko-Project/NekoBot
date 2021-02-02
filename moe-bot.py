@@ -11,15 +11,14 @@ from graia.application.event.messages import *
 from graia.application.event.mirai import *
 from graia.application.exceptions import *
 from graia.application.message.elements.internal import (
-    App, At, Image, Plain, Source)
+    App, At, Image, Plain)
 from graia.broadcast import Broadcast
-from graia.scheduler import GraiaScheduler, timers
+from graia.scheduler import GraiaScheduler
 
-import Api
-from MOEBOT.basics.tools import make_card
-import User
+import MOEBOT.basics.card_api as card_api
+import MOEBOT.basics.card_user as card_user
 from MOEBOT.basics.get_config import get_config
-
+from MOEBOT.basics.tools import make_card
 
 loop = asyncio.get_event_loop()
 
@@ -46,7 +45,7 @@ async def group_message_listener(
     message: MessageChain
 ):
     if message.asDisplay().startswith("查询记录"):
-        r = await Api.searchlog()
+        r = await card_api.searchlog()
         if r["code"] == 1:
             news = ""
             for i in r["data"]:
@@ -70,17 +69,17 @@ async def group_message_listener(
         await app.sendGroupMessage(group, msg)
 
     elif "抽卡" in message.asDisplay():
-        email = User.searchinfo(member.id)["email"]
+        email = card_user.searchinfo(member.id)["email"]
         if len(message.asDisplay()) != 3:
             r = {'code': 0, 'msg': '指令有误！正确格式：[抽卡+序号]'}
         elif message.asDisplay() == "抽卡1":
-            r = await Api.dailycard(email, 0, "0")
+            r = await card_api.dailycard(email, 0, "0")
         else:
             sel = (int(message.asDisplay()[2:3]) - 1 or 0)
-            r = await Api.dailycard(email, sel, "0")
+            r = await card_api.dailycard(email, sel, "0")
         if r["code"] == 1:
             make_card(r["packageId"], r["cardChoiseList"][0], r["cardChoiseList"][1], r["cardChoiseList"][2],
-                           r["choiseIndex"], r["isNew"])
+                      r["choiseIndex"], r["isNew"])
             msg = message.create([
                 At(target=member.id),
                 Plain("抽卡成功! 还剩%s次机会" % r["leftGetChance"]),
@@ -110,7 +109,7 @@ async def group_message_listener(
         await app.sendGroupMessage(group, msg)
 
     elif message.asDisplay()[:5] == "快速注册 ":
-        if User.searchinfo(member.id) != -1:
+        if card_user.searchinfo(member.id) != -1:
             await app.sendGroupMessage(group, message.create([
                 At(target=member.id),
                 Plain("您已注册！"),
@@ -119,13 +118,13 @@ async def group_message_listener(
             email = str(member.id) + "@qq.com"
             password = random.choice(['miaow', 'moecard'])
             nickName = message.asDisplay().partition(' ')[2]
-            r = await Api.reg(email, password, nickName)
+            r = await card_api.reg(email, password, nickName)
             if r["code"] == 1:
                 msg = message.create([
                     At(target=member.id),
                     Plain("注册成功!"),
                 ])
-                User.newuser(member.id, email)
+                card_user.newuser(member.id, email)
                 await app.sendGroupMessage(group, msg)
                 await app.sendFriendMessage(message.sender, message.create([
                     Plain('''
