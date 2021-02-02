@@ -1,0 +1,3 @@
+aiohttp
+Pillow
+graia-application-mirai==0.14.1
