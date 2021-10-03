@@ -1,6 +1,2 @@
 # 默认忽略的文件
-/__pycache__
-/*/__pycache__
-/public
-/temp
-/test
+__pycache__
