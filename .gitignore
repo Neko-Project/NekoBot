@@ -1,2 +1,9 @@
 # 默认忽略的文件
 __pycache__
+
+node_modules
+yarn.lock
+
+lib
+data
+kokkoro.json
